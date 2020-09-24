@@ -28,6 +28,7 @@
               "src/assets"
             ],
             "styles": [
+              "./node_modules/bootstrap/dist/css/bootstrap.min.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -123,6 +124,10 @@
           }
         }
       }
-    }},
-  "defaultProject": "trianglePlotter"
+    }
+  },
+  "defaultProject": "trianglePlotter",
+  "cli": {
+    "analytics": "59dc8987-f718-4401-aa68-72be5eba2932"
+  }
 }

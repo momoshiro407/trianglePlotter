@@ -1,0 +1,44 @@
+.control-area {
+	margin: 20px;
+	button {
+		margin-right: 10px;
+	}
+}
+
+.canvas-wrapper {
+	position: relative;
+	canvas {
+		position: absolute;
+    top: 0;
+    left: 0;
+	}
+	#dot {
+		border: solid 1px #c5c5c5;
+	}
+}
+
+.area-info {
+	border: solid 1px #c5c5c5;
+	width: 200px;
+	height: 50px;
+	margin-left: 10px;
+	margin-bottom: 10px;;
+	padding: 10px;
+}
+
+.vertex-info {
+	border: solid 1px #c5c5c5;
+	margin-left: 10px;
+	padding: 10px;
+	width: 200px;
+	height: 310px;
+	overflow-x: scroll;
+}
+
+.number {
+	width: 40px;
+}
+
+.cordinate {
+	width: 80px;
+}

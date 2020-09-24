@@ -1,0 +1,40 @@
+<div class="control-area">
+  <button (click)="closePath()">パスを閉じる</button>
+  <button (click)="clearAll()">描画をクリア</button>
+  <ng-container *ngIf="currentX && currentY">
+    X:{{currentX}} Y:{{currentY}}
+  </ng-container>
+</div>
+<div class="flame d-flex">
+  <div class="col-5">
+    <div class="canvas-wrapper">
+      <canvas id="line" #line width="600px" height="500px"></canvas><!-- 下層 -->
+      <canvas id="dot" #dot width="600px" height="500px" (mousemove)="getCurrentPosision($event)" (click)="onClickCanvas()"></canvas><!-- 上層 -->
+    </div>
+  </div>
+  <div class="col-2">
+    <div class="area-info">
+       <span>面積 = </span>
+      {{polygonArea}}
+    </div>
+    <div class="vertex-info">
+      <table border=1>
+        <thead>
+          <tr>
+            <td class="number">No.</td>
+            <td class="cordinate">X</td>
+            <td class="cordinate">Y</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let vertex of vertexList; let i = index">
+            <td class="number">{{i}}</td>
+            <td class="cordinate">{{vertex.x}}</td>
+            <td class="cordinate">{{vertex.y}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
