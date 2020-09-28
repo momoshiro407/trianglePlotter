@@ -5,33 +5,41 @@
 	}
 }
 
+.button {
+	&:hover {
+		cursor: pointer;
+	}
+}
+
+.plot {
+	margin-left: 10px;
+	float: left;
+}
+
+.information {
+	margin-left: 10px;
+	float: left;
+}
+
 .canvas-wrapper {
-	position: relative;
 	canvas {
-		position: absolute;
-    top: 0;
-		left: 0;
+		border: solid 1px #000000;
 		&:hover {
 			cursor: crosshair;
 		}
 	}
-	#dot {
-		border: solid 1px #c5c5c5;
-	}
 }
 
 .area-info {
-	border: solid 1px #c5c5c5;
+	border: solid 1px #000000;
 	width: 200px;
 	height: 50px;
-	margin-left: 10px;
 	margin-bottom: 10px;;
 	padding: 10px;
 }
 
 .vertex-info {
-	border: solid 1px #c5c5c5;
-	margin-left: 10px;
+	border: solid 1px #000000;
 	padding: 10px;
 	width: 200px;
 	height: 310px;

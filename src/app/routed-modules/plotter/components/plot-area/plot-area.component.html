@@ -6,13 +6,12 @@
   </ng-container>
 </div>
 <div class="flame d-flex">
-  <div class="col-5">
+  <div class="plot">
     <div class="canvas-wrapper">
-      <canvas id="line" #line width="600px" height="500px"></canvas><!-- 下層 -->
-      <canvas id="dot" #dot width="600px" height="500px" (mousemove)="getCurrentPosision($event)" (click)="onClickCanvas()"></canvas><!-- 上層 -->
+      <canvas #canvas id="canvas" #dot width="600px" height="500px" (mousemove)="getCurrentPosision($event)" (click)="onClickCanvas()"></canvas><!-- 上層 -->
     </div>
   </div>
-  <div class="col-2">
+  <div class="information">
     <div class="area-info">
       <span>面積 = </span>
       {{polygonArea}}
