@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Vertex } from 'src/app/shared/vertex';
-import { Path, Point, Shape } from 'paper';
+import { Group, Path, Point, Shape } from 'paper';
 import * as paper from 'paper';
 
 @Component({
@@ -13,17 +13,21 @@ export class PlotAreaComponent implements OnInit {
   canvas: ElementRef<HTMLCanvasElement>;
 
   path: any;
+  pathGroup: any;
   unsettledPath: any;
   currentX: number;
   currentY: number;
   vertexList: Vertex[] = [];
   polygonArea: number;
   isCross = false;
+  isMoueOnSegment = false;
+  activeItem: any;
 
   constructor() { }
 
   ngOnInit(): void {
     paper.setup(this.canvas.nativeElement);
+    this.initialItemSetting();
   }
 
   getCurrentPosision(event): void {
@@ -40,17 +44,12 @@ export class PlotAreaComponent implements OnInit {
     }
     // 多角形の面積が計算されている=パスが閉じられている時はプロットできないようにする
     if (this.polygonArea) { return; }
-    // プロットする前に予め空のPathオブジェクトを生成する
-    if (this.vertexList.length === 0) {
-      this.path = new Path();
-      this.unsettledPath = new Path();
-    }
     // パスの頂点座標の配列にクリック位置のx, y座標を追加する
     this.vertexList.push({
       x: this.currentX,
       y: this.currentY,
     });
-    this.plotRectangle();
+    this.plotMarker();
     this.drawLine();
   }
 
@@ -68,6 +67,7 @@ export class PlotAreaComponent implements OnInit {
     this.polygonArea = null;
     this.vertexList = [];
     this.isCross = false;
+    this.initialItemSetting();
   }
 
   calculatePolygonArea(): void {
@@ -80,12 +80,22 @@ export class PlotAreaComponent implements OnInit {
     this.polygonArea = Math.abs(sum) / 2;
   }
 
-  private plotRectangle(): void {
-    new Shape.Rectangle({
+  private initialItemSetting(): void {
+    this.path = new Path();
+    this.setMouseEventToPath();
+    this.unsettledPath = new Path();
+    this.pathGroup = new Group();
+    this.pathGroup.addChild(this.path);
+  }
+
+  private plotMarker(): void {
+    // 正方形のマーカー（パスの頂点を明示する印）を生成する
+    const marker = new Shape.Rectangle({
       center: new Point(this.currentX, this.currentY),
       size: 8,
       strokeColor: 'rgb(255, 0, 0)',
     });
+    this.pathGroup.addChild(marker);
   }
 
   private drawLine(): void {
@@ -96,7 +106,8 @@ export class PlotAreaComponent implements OnInit {
   }
 
   private drawUnsettledLine(): void {
-    if (!this.path || !this.unsettledPath || this.polygonArea) { return; }
+    // 何もプロットされていない、もしくは面積が計算済みの場合は未確定パスを描画しない
+    if (this.vertexList.length === 0 || this.polygonArea) { return; }
     this.unsettledPath.removeSegments();
     // 未確定パスの設定
     this.unsettledPath.strokeColor = 'rgb(0, 0, 0, 0.1)';
@@ -115,5 +126,43 @@ export class PlotAreaComponent implements OnInit {
   private checkCrossing(): void {
     const interSection = this.path.getIntersections(this.unsettledPath);
     this.isCross = interSection.length > 1;
+  }
+
+  private setMouseEventToPath(): void {
+    this.path.onMouseMove = (event) => {
+      if (this.polygonArea) {
+        const hitOptions = {
+          fill: false,
+          stroke: false,
+          segments: true,
+          tolerance: 10,
+        };
+        const hitResult = paper.project.hitTest(event.point, hitOptions);
+        this.activeItem = hitResult && hitResult.segment;
+        this.isMoueOnSegment = !!this.activeItem;
+      }
+    };
+
+    this.path.onMouseDrag = (event) => {
+      if (this.activeItem) {
+        const index = this.activeItem.index;
+        // パスのセグメントの座標を更新する
+        this.activeItem.point.x = event.point.x;
+        this.activeItem.point.y = event.point.y;
+        // パス頂点のマーカーの座標を更新する
+        this.pathGroup.children[index + 1].position.x = event.point.x;
+        this.pathGroup.children[index + 1].position.y = event.point.y;
+      }
+    };
+
+    this.path.onMouseUp = () => {
+      if (this.activeItem) {
+        const index = this.activeItem.index;
+        this.vertexList[index].x = this.activeItem.point.x;
+        this.vertexList[index].y = this.activeItem.point.y;
+        // 面積を再計算する
+        this.calculatePolygonArea();
+      }
+    };
   }
 }
