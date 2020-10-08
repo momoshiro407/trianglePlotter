@@ -28,6 +28,11 @@
 			cursor: crosshair;
 		}
 	}
+	canvas.onSegment {
+		&:hover {
+			cursor: move;
+		}
+	}
 }
 
 .area-info {

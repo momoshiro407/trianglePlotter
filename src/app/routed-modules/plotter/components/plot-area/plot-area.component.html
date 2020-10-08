@@ -8,7 +8,8 @@
 <div class="flame d-flex">
   <div class="plot">
     <div class="canvas-wrapper">
-      <canvas #canvas id="canvas" #dot width="600px" height="500px" (mousemove)="getCurrentPosision($event)" (click)="onClickCanvas()"></canvas><!-- 上層 -->
+      <canvas #canvas id="canvas" #dot width="600px" height="500px" (mousemove)="getCurrentPosision($event)" (click)="onClickCanvas()"
+        [class.onSegment]="isMouseOnSegment"></canvas>
     </div>
   </div>
   <div class="information">
