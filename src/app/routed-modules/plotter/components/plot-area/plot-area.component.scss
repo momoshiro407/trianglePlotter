@@ -28,11 +28,11 @@
 			cursor: crosshair;
 		}
 	}
-}
-
-.onSegment {
-	// background-color: red;
-	cursor: pointer;
+	canvas.onSegment {
+		&:hover {
+			cursor: move;
+		}
+	}
 }
 
 .area-info {

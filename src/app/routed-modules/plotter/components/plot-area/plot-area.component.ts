@@ -20,7 +20,8 @@ export class PlotAreaComponent implements OnInit {
   vertexList: Vertex[] = [];
   polygonArea: number;
   isCross = false;
-  isMoueOnSegment = false;
+  isMouseOnSegment = false;
+  isMouseDragging = false;
   activeItem: any;
 
   constructor() { }
@@ -40,6 +41,8 @@ export class PlotAreaComponent implements OnInit {
   onClickCanvas(): void {
     if (this.isCross) {
       alert('パスが交差する位置に点を打つことは出来ません。');
+      // 交差フラグをクリアする
+      this.isCross = false;
       return;
     }
     // 多角形の面積が計算されている=パスが閉じられている時はプロットできないようにする
@@ -131,6 +134,7 @@ export class PlotAreaComponent implements OnInit {
   private setMouseEventToPath(): void {
     this.path.onMouseMove = (event) => {
       if (this.polygonArea) {
+        // セグメントとの当たり判定のみを有効にする
         const hitOptions = {
           fill: false,
           stroke: false,
@@ -139,29 +143,55 @@ export class PlotAreaComponent implements OnInit {
         };
         const hitResult = paper.project.hitTest(event.point, hitOptions);
         this.activeItem = hitResult && hitResult.segment;
-        this.isMoueOnSegment = !!this.activeItem;
+        this.isMouseOnSegment = !!this.activeItem;
       }
     };
 
     this.path.onMouseDrag = (event) => {
       if (this.activeItem) {
         const index = this.activeItem.index;
+        this.isMouseDragging = true;
         // パスのセグメントの座標を更新する
         this.activeItem.point.x = event.point.x;
         this.activeItem.point.y = event.point.y;
         // パス頂点のマーカーの座標を更新する
         this.pathGroup.children[index + 1].position.x = event.point.x;
         this.pathGroup.children[index + 1].position.y = event.point.y;
+        // パス同士の交差を判定する
+        const interSection = this.path.getIntersections(this.path);
+        this.isCross = interSection.length > 0;
       }
     };
 
     this.path.onMouseUp = () => {
       if (this.activeItem) {
         const index = this.activeItem.index;
+        if (this.isCross) {
+          // パスのセグメントの座標をドラッグ移動前に戻す
+          this.activeItem.point.x = this.vertexList[index].x;
+          this.activeItem.point.y = this.vertexList[index].y;
+          // パス頂点のマーカーの座標をドラッグ移動前に戻す
+          this.pathGroup.children[index + 1].position.x = this.vertexList[index].x;
+          this.pathGroup.children[index + 1].position.y = this.vertexList[index].y;
+          // セグメントからカーソルが離れるのでオンマウスのフラグをクリアする
+          this.isMouseOnSegment = false;
+          return;
+        }
         this.vertexList[index].x = this.activeItem.point.x;
         this.vertexList[index].y = this.activeItem.point.y;
+        this.isMouseDragging  = false;
         // 面積を再計算する
         this.calculatePolygonArea();
+      }
+    };
+
+    this.path.onMouseLeave = () => {
+      if (this.activeItem) {
+        // セグメントをドラッグしている途中の場合は処理を行わない
+        if (this.isMouseDragging) { return; }
+        // セグメントからマウスが離れた場合はactiveItemとオンマウスのフラグをクリアする
+        this.activeItem = null;
+        this.isMouseOnSegment = false;
       }
     };
   }
