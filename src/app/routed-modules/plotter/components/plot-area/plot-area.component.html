@@ -8,8 +8,9 @@
 <div class="flame d-flex">
   <div class="plot">
     <div class="canvas-wrapper">
-      <canvas #canvas id="canvas" #dot width="600px" height="500px" (mousemove)="getCurrentPosision($event)" (click)="onClickCanvas()"
-        [class.onSegment]="isMouseOnSegment"></canvas>
+      <canvas #canvas id="canvas" #dot width="600px" height="500px" (mousemove)="getCurrentPosision($event)"
+        (click)="onClickCanvas()" [class.onSegment]="isMouseOnSegment" (contextmenu)="openMenu($event)">
+      </canvas>
     </div>
   </div>
   <div class="information">
@@ -37,4 +38,10 @@
     </div>
   </div>
 </div>
-
+<!-- 頂点追加・削除実行用コンテキストメニュー -->
+<ng-template #menu>
+  <div class="context-menu">
+    <div (click)="addSegment()">頂点の追加</div>
+    <div (click)="removeSegment()">頂点の削除</div>
+  </div>
+</ng-template>

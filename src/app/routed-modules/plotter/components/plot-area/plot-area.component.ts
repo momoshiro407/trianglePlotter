@@ -1,7 +1,8 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { Vertex } from 'src/app/shared/vertex';
+import { Component, ElementRef, OnInit, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
+import { Vertex } from 'src/app/shared/model/vertex';
 import { Group, Path, Point, Shape } from 'paper';
 import * as paper from 'paper';
+import { ContextMenuService } from 'src/app/shared/service/context-menu.service';
 
 @Component({
   selector: 'app-plot-area',
@@ -11,6 +12,9 @@ import * as paper from 'paper';
 export class PlotAreaComponent implements OnInit {
   @ViewChild('canvas', { static: true })
   canvas: ElementRef<HTMLCanvasElement>;
+
+  @ViewChild('menu')
+  menu: TemplateRef<any>;
 
   path: any;
   pathGroup: any;
@@ -24,7 +28,10 @@ export class PlotAreaComponent implements OnInit {
   isMouseDragging = false;
   activeItem: any;
 
-  constructor() { }
+  constructor(
+    private contextMenuService: ContextMenuService,
+    private viewContainerRef: ViewContainerRef,
+  ) { }
 
   ngOnInit(): void {
     paper.setup(this.canvas.nativeElement);
@@ -81,6 +88,20 @@ export class PlotAreaComponent implements OnInit {
       return prev + (curValue.x * array[nextIndex].y - array[nextIndex].x * curValue.y)
     }, 0);
     this.polygonArea = Math.abs(sum) / 2;
+  }
+
+  openMenu(event: MouseEvent): boolean{
+    this.contextMenuService.open(event, this.menu, this.viewContainerRef);
+    // // デフォルトののコンテキストメニューが開かないようにfalseを返す
+    return  false;
+  }
+
+  addSegment(): void {
+    this.contextMenuService.close();
+  }
+
+  removeSegment(): void {
+    this.contextMenuService.close();
   }
 
   private initialItemSetting(): void {
