@@ -41,7 +41,7 @@
 <!-- 頂点追加・削除実行用コンテキストメニュー -->
 <ng-template #menu>
   <div class="context-menu">
-    <div (click)="addSegment()">頂点の追加</div>
-    <div (click)="removeSegment()">頂点の削除</div>
+    <div (click)="addSegment()" [class.disabled]="!isMouseOnStroke">頂点の追加</div>
+    <div (click)="removeSegment()" [class.disabled]="!isMouseOnSegment">頂点の削除</div>
   </div>
 </ng-template>

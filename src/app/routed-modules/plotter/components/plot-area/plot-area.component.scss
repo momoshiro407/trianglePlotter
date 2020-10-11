@@ -77,4 +77,9 @@
 			background-color: #5e5e5e;
 		}
 	}
+	.disabled {
+		pointer-events: none;
+		color: #dfdfdf;
+	}
 }
+
