@@ -12,6 +12,7 @@ export class ContextMenuService {
 
   overlayRef: OverlayRef;
   sub: Subscription;
+  isEditMenuOpened = false;
 
   constructor(
     public overlay: Overlay,
@@ -19,6 +20,7 @@ export class ContextMenuService {
 
   open(event: MouseEvent, template: TemplateRef<any>, viewContainerRef: ViewContainerRef): void {
     this.close();
+    this.isEditMenuOpened = true;
     const positionStrategy = this.overlay.position()
       .flexibleConnectedTo(event)
       .withPositions([
@@ -55,5 +57,6 @@ export class ContextMenuService {
       this.overlayRef.dispose();
       this.overlayRef = null;
     }
+    this.isEditMenuOpened = false;
   }
 }
