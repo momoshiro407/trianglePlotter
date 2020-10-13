@@ -7,6 +7,7 @@ import { PlotAreaComponent } from './routed-modules/plotter/components/plot-area
 import { InfoAreaComponent } from './routed-modules/plotter/components/info-area/info-area.component';
 import { PlotterComponent } from './routed-modules/plotter/plotter.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { OverlayModule } from '@angular/cdk/overlay';
 
 
 @NgModule({
@@ -20,6 +21,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     BrowserModule,
     AppRoutingModule,
     NgbModule,
+    OverlayModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

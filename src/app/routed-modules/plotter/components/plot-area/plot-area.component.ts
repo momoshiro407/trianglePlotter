@@ -1,7 +1,8 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { Vertex } from 'src/app/shared/vertex';
+import { Component, ElementRef, OnInit, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
+import { Vertex } from 'src/app/shared/model/vertex';
 import { Group, Path, Point, Shape } from 'paper';
 import * as paper from 'paper';
+import { ContextMenuService } from 'src/app/shared/service/context-menu.service';
 
 @Component({
   selector: 'app-plot-area',
@@ -12,19 +13,34 @@ export class PlotAreaComponent implements OnInit {
   @ViewChild('canvas', { static: true })
   canvas: ElementRef<HTMLCanvasElement>;
 
+  @ViewChild('menu')
+  menu: TemplateRef<any>;
+
+  // パスオブジェクト関係
   path: any;
   pathGroup: any;
   unsettledPath: any;
+  // マウスポインターの座標関係
   currentX: number;
   currentY: number;
+  editStartX: number;
+  editStartY: number;
+　// 面積計算関係
   vertexList: Vertex[] = [];
   polygonArea: number;
+  // 各種フラグ
   isCross = false;
   isMouseOnSegment = false;
+  isMouseOnStroke = false;
   isMouseDragging = false;
-  activeItem: any;
+  // オンマウス状態のパスの子オブジェクト
+  activeSegment: any;
+  activeStrokeLocation: any;
 
-  constructor() { }
+  constructor(
+    private contextMenuService: ContextMenuService,
+    private viewContainerRef: ViewContainerRef,
+  ) { }
 
   ngOnInit(): void {
     paper.setup(this.canvas.nativeElement);
@@ -52,13 +68,13 @@ export class PlotAreaComponent implements OnInit {
       x: this.currentX,
       y: this.currentY,
     });
-    this.plotMarker();
+    this.plotMarker(this.currentX, this.currentY);
     this.drawLine();
   }
 
   closePath(): void {
-    // 何もプロットされていない場合はパスを閉じられないようにする
-    if (this.vertexList.length === 0) { return; }
+    // プロット数が3点未満の場合はパスを閉じられないようにする
+    if (this.path.segments.length < 3) { return; }
     this.path.closePath();
     this.path.fillColor = 'rgb(255, 0, 0, 0.2)';
     this.unsettledPath.removeSegments();
@@ -83,6 +99,40 @@ export class PlotAreaComponent implements OnInit {
     this.polygonArea = Math.abs(sum) / 2;
   }
 
+  openMenu(event: MouseEvent): boolean{
+    // カーソルが多角形のセグメント上にもストローク上にもない場合はデフォルトのコンテキストメニューを開く
+    if (!this.isMouseOnSegment && !this.isMouseOnStroke) { return true; }
+
+    // 右クリックした時点のマウスポインターの座標を保持する
+    this.editStartX = this.currentX;
+    this.editStartY = this.currentY;
+    this.contextMenuService.open(event, this.menu, this.viewContainerRef);
+    // デフォルトのコンテキストメニューが開かないようにfalseを返す
+    return  false;
+  }
+
+  addSegment(): void {
+    const insertIndex = this.activeStrokeLocation.index + 1;
+    this.path.insert(insertIndex, new Point(this.editStartX, this.editStartY));
+    this.vertexList.splice(insertIndex, 0, {x: this.editStartX, y: this.editStartY});
+    this.plotMarker(this.editStartX, this.editStartY, insertIndex);
+    this.contextMenuService.close();
+  }
+
+  removeSegment(): void {
+    // 現在の頂点数が3個の場合は削除できないようにする
+    if (this.path.segments.length === 3) {
+      alert('多角形の描画には3個以上の頂点が必要です。');
+      this.contextMenuService.close();
+      return;
+    }
+    const removeIndex = this.activeSegment.index;
+    this.path.removeSegment(removeIndex);
+    this.vertexList.splice(removeIndex, 1);
+    this.pathGroup.removeChildren(removeIndex + 1, removeIndex + 2);
+    this.contextMenuService.close();
+  }
+
   private initialItemSetting(): void {
     this.path = new Path();
     this.setMouseEventToPath();
@@ -91,14 +141,20 @@ export class PlotAreaComponent implements OnInit {
     this.pathGroup.addChild(this.path);
   }
 
-  private plotMarker(): void {
+  private plotMarker(x: number, y: number, insertIndex?: number): void {
     // 正方形のマーカー（パスの頂点を明示する印）を生成する
     const marker = new Shape.Rectangle({
-      center: new Point(this.currentX, this.currentY),
+      center: new Point(x, y),
       size: 8,
       strokeColor: 'rgb(255, 0, 0)',
     });
-    this.pathGroup.addChild(marker);
+    if (insertIndex) {
+      // 頂点追加処理の場合、パスグループの既存の子要素配列の間に挿入する
+      this.pathGroup.insertChild(insertIndex + 1, marker);
+    } else {
+      // 多角形を閉じる前はパスグループの子要素配列の末尾に追加していく
+      this.pathGroup.addChild(marker);
+    }
   }
 
   private drawLine(): void {
@@ -133,27 +189,31 @@ export class PlotAreaComponent implements OnInit {
 
   private setMouseEventToPath(): void {
     this.path.onMouseMove = (event) => {
+      // 頂点編集メニューが表示されている場合はイベントを実行しない
+      if (this.contextMenuService.isEditMenuOpened) { return; }
       if (this.polygonArea) {
-        // セグメントとの当たり判定のみを有効にする
+        // セグメントとストロークの当たり判定のみを有効にする
         const hitOptions = {
           fill: false,
-          stroke: false,
+          stroke: true,
           segments: true,
-          tolerance: 10,
+          tolerance: 1,
         };
         const hitResult = paper.project.hitTest(event.point, hitOptions);
-        this.activeItem = hitResult && hitResult.segment;
-        this.isMouseOnSegment = !!this.activeItem;
+        this.activeSegment = hitResult && hitResult.segment;
+        this.isMouseOnSegment = !!this.activeSegment;
+        this.activeStrokeLocation = hitResult && hitResult.type === 'stroke' ? hitResult.location : null;
+        this.isMouseOnStroke = !!this.activeStrokeLocation;
       }
     };
 
     this.path.onMouseDrag = (event) => {
-      if (this.activeItem) {
-        const index = this.activeItem.index;
+      if (this.activeSegment) {
+        const index = this.activeSegment.index;
         this.isMouseDragging = true;
         // パスのセグメントの座標を更新する
-        this.activeItem.point.x = event.point.x;
-        this.activeItem.point.y = event.point.y;
+        this.activeSegment.point.x = event.point.x;
+        this.activeSegment.point.y = event.point.y;
         // パス頂点のマーカーの座標を更新する
         this.pathGroup.children[index + 1].position.x = event.point.x;
         this.pathGroup.children[index + 1].position.y = event.point.y;
@@ -164,12 +224,12 @@ export class PlotAreaComponent implements OnInit {
     };
 
     this.path.onMouseUp = () => {
-      if (this.activeItem) {
-        const index = this.activeItem.index;
+      if (this.activeSegment) {
+        const index = this.activeSegment.index;
         if (this.isCross) {
           // パスのセグメントの座標をドラッグ移動前に戻す
-          this.activeItem.point.x = this.vertexList[index].x;
-          this.activeItem.point.y = this.vertexList[index].y;
+          this.activeSegment.point.x = this.vertexList[index].x;
+          this.activeSegment.point.y = this.vertexList[index].y;
           // パス頂点のマーカーの座標をドラッグ移動前に戻す
           this.pathGroup.children[index + 1].position.x = this.vertexList[index].x;
           this.pathGroup.children[index + 1].position.y = this.vertexList[index].y;
@@ -177,8 +237,8 @@ export class PlotAreaComponent implements OnInit {
           this.isMouseOnSegment = false;
           return;
         }
-        this.vertexList[index].x = this.activeItem.point.x;
-        this.vertexList[index].y = this.activeItem.point.y;
+        this.vertexList[index].x = this.activeSegment.point.x;
+        this.vertexList[index].y = this.activeSegment.point.y;
         this.isMouseDragging  = false;
         // 面積を再計算する
         this.calculatePolygonArea();
@@ -186,13 +246,16 @@ export class PlotAreaComponent implements OnInit {
     };
 
     this.path.onMouseLeave = () => {
-      if (this.activeItem) {
+      // 頂点編集メニューが表示されている場合はイベントを実行しない
+      if (this.contextMenuService.isEditMenuOpened) { return; }
+      if (this.activeSegment) {
         // セグメントをドラッグしている途中の場合は処理を行わない
         if (this.isMouseDragging) { return; }
         // セグメントからマウスが離れた場合はactiveItemとオンマウスのフラグをクリアする
-        this.activeItem = null;
+        this.activeSegment = null;
         this.isMouseOnSegment = false;
       }
+      this.isMouseOnStroke = false;
     };
   }
 }
