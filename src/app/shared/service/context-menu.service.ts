@@ -34,7 +34,6 @@ export class ContextMenuService {
 
     this.overlayRef = this.overlay.create({
       positionStrategy,
-      scrollStrategy: this.overlay.scrollStrategies.close()
     });
 
     this.overlayRef.attach(new TemplatePortal(template, viewContainerRef));
