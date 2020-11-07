@@ -39,9 +39,12 @@
   </div>
 </div>
 <!-- 頂点追加・削除実行用コンテキストメニュー -->
-<ng-template #menu>
-  <div class="context-menu">
-    <div (click)="addSegment()" [class.disabled]="!isMouseOnStroke">頂点の追加</div>
-    <div (click)="removeSegment()" [class.disabled]="!isMouseOnSegment">頂点の削除</div>
-  </div>
-</ng-template>
+<div style="visibility: hidden; position: fixed;" [matMenuTriggerFor]="contextMenu" (menuClosed)="afterMenuClosed()"
+  [style.left]="contextMenuPosition.x"[style.top]="contextMenuPosition.y">
+</div>
+<mat-menu #contextMenu="matMenu">
+  <ng-template matMenuContent class="context-menu">
+    <div mat-menu-item (click)="addSegment()" [class.disabled]="!isMouseOnStroke">頂点の追加</div>
+    <div mat-menu-item (click)="removeSegment()" [class.disabled]="!isMouseOnSegment">頂点の削除</div>
+  </ng-template>
+</mat-menu>

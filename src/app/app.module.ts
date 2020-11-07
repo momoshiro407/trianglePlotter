@@ -8,6 +8,8 @@ import { InfoAreaComponent } from './routed-modules/plotter/components/info-area
 import { PlotterComponent } from './routed-modules/plotter/plotter.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { OverlayModule } from '@angular/cdk/overlay';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatMenuModule } from '@angular/material/menu';
 
 
 @NgModule({
@@ -22,6 +24,8 @@ import { OverlayModule } from '@angular/cdk/overlay';
     AppRoutingModule,
     NgbModule,
     OverlayModule,
+    BrowserAnimationsModule,
+    MatMenuModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
