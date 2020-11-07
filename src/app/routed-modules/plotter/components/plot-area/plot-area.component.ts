@@ -39,7 +39,7 @@ export class PlotAreaComponent implements OnInit {
 
   constructor(
     private contextMenuService: ContextMenuService,
-    private viewContainerRef: ViewContainerRef,
+    public viewContainerRef: ViewContainerRef,
   ) { }
 
   ngOnInit(): void {
@@ -131,6 +131,7 @@ export class PlotAreaComponent implements OnInit {
     this.vertexList.splice(removeIndex, 1);
     this.pathGroup.removeChildren(removeIndex + 1, removeIndex + 2);
     this.contextMenuService.close();
+    this.isMouseOnSegment = false;
   }
 
   private initialItemSetting(): void {
