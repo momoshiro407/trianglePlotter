@@ -1,8 +1,8 @@
-import { Component, ElementRef, OnInit, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { Vertex } from 'src/app/shared/model/vertex';
 import { Group, Path, Point, Shape } from 'paper';
 import * as paper from 'paper';
-import { ContextMenuService } from 'src/app/shared/service/context-menu.service';
+import { MatMenuTrigger } from '@angular/material/menu';
 
 @Component({
   selector: 'app-plot-area',
@@ -13,8 +13,8 @@ export class PlotAreaComponent implements OnInit {
   @ViewChild('canvas', { static: true })
   canvas: ElementRef<HTMLCanvasElement>;
 
-  @ViewChild('menu')
-  menu: TemplateRef<any>;
+  @ViewChild(MatMenuTrigger)
+  contextMenu: MatMenuTrigger;
 
   // パスオブジェクト関係
   path: any;
@@ -36,9 +36,11 @@ export class PlotAreaComponent implements OnInit {
   // オンマウス状態のパスの子オブジェクト
   activeSegment: any;
   activeStrokeLocation: any;
+  // コンテキストメニュー関係
+  contextMenuPosition = { x: '0px', y: '0px' };
+  isEditMenuOpened = false;
 
   constructor(
-    private contextMenuService: ContextMenuService,
     public viewContainerRef: ViewContainerRef,
   ) { }
 
@@ -100,15 +102,18 @@ export class PlotAreaComponent implements OnInit {
   }
 
   openMenu(event: MouseEvent): boolean{
-    // カーソルが多角形のセグメント上にもストローク上にもない場合はデフォルトのコンテキストメニューを開く
+    // カーソルが多角形のセグメント上にもストローク上にもない場合は頂点編集メニューを開く
     if (!this.isMouseOnSegment && !this.isMouseOnStroke) { return true; }
-
+    this.isEditMenuOpened = true;
+    // デフォルトのコンテキストメニューを開かないようにする
+    event.preventDefault();
     // 右クリックした時点のマウスポインターの座標を保持する
     this.editStartX = this.currentX;
     this.editStartY = this.currentY;
-    this.contextMenuService.open(event, this.menu, this.viewContainerRef);
-    // デフォルトのコンテキストメニューが開かないようにfalseを返す
-    return  false;
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.openMenu();
   }
 
   addSegment(): void {
@@ -116,22 +121,30 @@ export class PlotAreaComponent implements OnInit {
     this.path.insert(insertIndex, new Point(this.editStartX, this.editStartY));
     this.vertexList.splice(insertIndex, 0, {x: this.editStartX, y: this.editStartY});
     this.plotMarker(this.editStartX, this.editStartY, insertIndex);
-    this.contextMenuService.close();
+    this.contextMenu.closeMenu();
   }
 
   removeSegment(): void {
     // 現在の頂点数が3個の場合は削除できないようにする
     if (this.path.segments.length === 3) {
       alert('多角形の描画には3個以上の頂点が必要です。');
-      this.contextMenuService.close();
+      this.contextMenu.closeMenu();
       return;
     }
     const removeIndex = this.activeSegment.index;
     this.path.removeSegment(removeIndex);
     this.vertexList.splice(removeIndex, 1);
     this.pathGroup.removeChildren(removeIndex + 1, removeIndex + 2);
-    this.contextMenuService.close();
+    this.contextMenu.closeMenu();
     this.isMouseOnSegment = false;
+  }
+
+  afterMenuClosed(): void {
+    this.isEditMenuOpened = false;
+    this.activeSegment = null;
+    this.activeStrokeLocation = null;
+    this.isMouseOnSegment = false;
+    this.isMouseOnStroke = false;
   }
 
   private initialItemSetting(): void {
@@ -191,7 +204,7 @@ export class PlotAreaComponent implements OnInit {
   private setMouseEventToPath(): void {
     this.path.onMouseMove = (event) => {
       // 頂点編集メニューが表示されている場合はイベントを実行しない
-      if (this.contextMenuService.isEditMenuOpened) { return; }
+      if (this.isEditMenuOpened) { return; }
       if (this.polygonArea) {
         // セグメントとストロークの当たり判定のみを有効にする
         const hitOptions = {
@@ -248,7 +261,7 @@ export class PlotAreaComponent implements OnInit {
 
     this.path.onMouseLeave = () => {
       // 頂点編集メニューが表示されている場合はイベントを実行しない
-      if (this.contextMenuService.isEditMenuOpened) { return; }
+      if (this.isEditMenuOpened) { return; }
       if (this.activeSegment) {
         // セグメントをドラッグしている途中の場合は処理を行わない
         if (this.isMouseDragging) { return; }
