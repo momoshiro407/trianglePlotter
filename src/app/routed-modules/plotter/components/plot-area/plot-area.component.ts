@@ -101,7 +101,7 @@ export class PlotAreaComponent implements OnInit {
     this.polygonArea = Math.abs(sum) / 2;
   }
 
-  openMenu(event: MouseEvent): boolean{
+  openMenu(event: MouseEvent): boolean {
     // カーソルが多角形のセグメント上にもストローク上にもない場合は頂点編集メニューを開かない
     if (!this.isMouseOnSegment && !this.isMouseOnStroke) { return true; }
     this.isEditMenuOpened = true;
@@ -112,7 +112,6 @@ export class PlotAreaComponent implements OnInit {
     this.editStartY = this.currentY;
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
-    this.contextMenu.menu.focusFirstItem('mouse');
     this.contextMenu.openMenu();
   }
 
