@@ -102,7 +102,7 @@ export class PlotAreaComponent implements OnInit {
   }
 
   openMenu(event: MouseEvent): boolean{
-    // カーソルが多角形のセグメント上にもストローク上にもない場合は頂点編集メニューを開く
+    // カーソルが多角形のセグメント上にもストローク上にもない場合は頂点編集メニューを開かない
     if (!this.isMouseOnSegment && !this.isMouseOnStroke) { return true; }
     this.isEditMenuOpened = true;
     // デフォルトのコンテキストメニューを開かないようにする
