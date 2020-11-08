@@ -35,7 +35,7 @@ export class PlotAreaComponent implements OnInit {
   isMouseDragging = false;
   // オンマウス状態のパスの子オブジェクト
   activeSegment: any;
-  activeStrokeLocation: any;
+  activeLocation: any;
   // コンテキストメニュー関係
   contextMenuPosition = { x: '0px', y: '0px' };
   isEditMenuOpened = false;
@@ -116,7 +116,7 @@ export class PlotAreaComponent implements OnInit {
   }
 
   addSegment(): void {
-    const insertIndex = this.activeStrokeLocation.index + 1;
+    const insertIndex = this.activeLocation.index + 1;
     this.path.insert(insertIndex, new Point(this.editStartX, this.editStartY));
     this.vertexList.splice(insertIndex, 0, {x: this.editStartX, y: this.editStartY});
     this.plotMarker(this.editStartX, this.editStartY, insertIndex);
@@ -141,7 +141,7 @@ export class PlotAreaComponent implements OnInit {
   afterMenuClosed(): void {
     this.isEditMenuOpened = false;
     this.activeSegment = null;
-    this.activeStrokeLocation = null;
+    this.activeLocation = null;
     this.isMouseOnSegment = false;
     this.isMouseOnStroke = false;
   }
@@ -215,8 +215,8 @@ export class PlotAreaComponent implements OnInit {
         const hitResult = paper.project.hitTest(event.point, hitOptions);
         this.activeSegment = hitResult && hitResult.segment;
         this.isMouseOnSegment = !!this.activeSegment;
-        this.activeStrokeLocation = hitResult && hitResult.type === 'stroke' ? hitResult.location : null;
-        this.isMouseOnStroke = !!this.activeStrokeLocation;
+        this.activeLocation = hitResult && hitResult.location;
+        this.isMouseOnStroke = !!this.activeLocation;
       }
     };
 
